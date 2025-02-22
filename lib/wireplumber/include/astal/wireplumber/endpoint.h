@@ -39,6 +39,7 @@ const gchar *astal_wp_endpoint_get_icon(AstalWpEndpoint *self);
 const gchar *astal_wp_endpoint_get_volume_icon(AstalWpEndpoint *self);
 guint astal_wp_endpoint_get_serial(AstalWpEndpoint *self);
 const gchar *astal_wp_endpoint_get_path(AstalWpEndpoint *self);
+guint astal_wp_endpoint_get_device_id(AstalWpEndpoint *self);
 
 G_END_DECLS
 
