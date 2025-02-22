@@ -9,6 +9,7 @@ struct _AstalWpDevice {
     guint id;
     gchar *description;
     gchar *icon;
+    gchar *form_factor;
     gint active_profile;
     AstalWpDeviceType type;
 };
@@ -31,6 +32,7 @@ typedef enum {
     ASTAL_WP_DEVICE_PROP_PROFILES,
     ASTAL_WP_DEVICE_PROP_ACTIVE_PROFILE,
     ASTAL_WP_DEVICE_PROP_DEVICE_TYPE,
+    ASTAL_WP_DEVICE_PROP_FORM_FACTOR,
     ASTAL_WP_DEVICE_N_PROPERTIES,
 } AstalWpDeviceProperties;
 
@@ -67,6 +69,17 @@ const gchar *astal_wp_device_get_icon(AstalWpDevice *self) {
     g_return_val_if_fail(self != NULL, "audio-card-symbolic");
     return self->icon;
 }
+
+/**
+ * astal_wp_device_get_form_factor
+ * @self: the AstalWpDevice object
+ *
+ * gets the form factor of this device
+ *
+ */
+const gchar *astal_wp_device_get_form_factor(AstalWpDevice *self) { return self->form_factor; }
+
+
 
 /**
  * astal_wp_device_get_device_type
@@ -157,6 +170,9 @@ static void astal_wp_device_get_property(GObject *object, guint property_id, GVa
             break;
         case ASTAL_WP_DEVICE_PROP_ACTIVE_PROFILE:
             g_value_set_int(value, self->active_profile);
+            break;
+        case ASTAL_WP_DEVICE_PROP_FORM_FACTOR:
+            g_value_set_string(value, self->form_factor);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -263,6 +279,14 @@ static void astal_wp_device_update_properties(AstalWpDevice *self) {
     g_free(self->icon);
     self->icon = g_strdup(icon);
 
+    const gchar *form_factor =
+        wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(priv->device), "device.form-factor");
+    if (form_factor == NULL) {
+        form_factor = "unknown";
+    }
+    g_free(self->form_factor);
+    self->form_factor = g_strdup(form_factor);
+
     const gchar *type =
         wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(priv->device), "media.class");
     GEnumClass *enum_class = g_type_class_ref(ASTAL_WP_TYPE_DEVICE_TYPE);
@@ -277,6 +301,7 @@ static void astal_wp_device_update_properties(AstalWpDevice *self) {
     g_object_notify(G_OBJECT(self), "device-type");
     g_object_notify(G_OBJECT(self), "icon");
     g_object_notify(G_OBJECT(self), "description");
+    g_object_notify(G_OBJECT(self), "form-factor");
 }
 
 AstalWpDevice *astal_wp_device_create(WpDevice *device) {
@@ -365,6 +390,15 @@ static void astal_wp_device_class_init(AstalWpDeviceClass *class) {
     astal_wp_device_properties[ASTAL_WP_DEVICE_PROP_ACTIVE_PROFILE] =
         g_param_spec_int("active-profile-id", "active-profile-id", "active-profile-id", G_MININT,
                          G_MAXINT, 0, G_PARAM_READWRITE);
+
+    /**
+     * AstalWpDevice:form-factor
+     *
+     * The form factor for this device.
+     */
+    astal_wp_device_properties[ASTAL_WP_DEVICE_PROP_FORM_FACTOR] =
+        g_param_spec_string("form-factor", "form-factor", "form-factor", NULL, G_PARAM_READABLE);
+
 
     g_object_class_install_properties(object_class, ASTAL_WP_DEVICE_N_PROPERTIES,
                                       astal_wp_device_properties);

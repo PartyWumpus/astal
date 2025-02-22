@@ -18,6 +18,7 @@ typedef enum { ASTAL_WP_DEVICE_TYPE_AUDIO, ASTAL_WP_DEVICE_TYPE_VIDEO } AstalWpD
 guint astal_wp_device_get_id(AstalWpDevice *self);
 const gchar *astal_wp_device_get_description(AstalWpDevice *self);
 const gchar *astal_wp_device_get_icon(AstalWpDevice *self);
+const gchar *astal_wp_device_get_form_factor(AstalWpDevice *self);
 AstalWpProfile *astal_wp_device_get_profile(AstalWpDevice *self, gint id);
 GList *astal_wp_device_get_profiles(AstalWpDevice *self);
 void astal_wp_device_set_active_profile(AstalWpDevice *self, int profile_id);
