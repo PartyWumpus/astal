@@ -4,6 +4,7 @@
 
 #include "device.h"
 #include "endpoint-private.h"
+#include "glib-object.h"
 #include "glib.h"
 #include "wp.h"
 
@@ -18,6 +19,7 @@ struct _AstalWpEndpoint {
     guint serial;
     gchar *path;
     guint device_id;
+    AstalWpDevice *device;
 
     AstalWpMediaClass type;
     gboolean is_default;
@@ -65,6 +67,7 @@ typedef enum {
     ASTAL_WP_ENDPOINT_PROP_LOCK_CHANNELS,
     ASTAL_WP_ENDPOINT_PROP_SERIAL,
     ASTAL_WP_ENDPOINT_PROP_DEVICE_ID,
+    ASTAL_WP_ENDPOINT_PROP_DEVICE,
     ASTAL_WP_ENDPOINT_PROP_PATH,
     ASTAL_WP_ENDPOINT_N_PROPERTIES,
 } AstalWpEndpointProperties;
@@ -245,6 +248,16 @@ const gchar *astal_wp_endpoint_get_name(AstalWpEndpoint *self) { return self->na
  */
 const gchar *astal_wp_endpoint_get_icon(AstalWpEndpoint *self) { return self->icon; }
 
+/**
+ * astal_wp_endpoint_get_device:
+ * @self: the AstalWpEndpoint instance.
+ *
+ * gets the device for this endpoint
+ */
+AstalWpDevice *astal_wp_endpoint_get_device(AstalWpEndpoint *self) { return self->device; }
+
+
+
 gboolean astal_wp_endpoint_get_is_default(AstalWpEndpoint *self) { return self->is_default; }
 
 void astal_wp_endpoint_set_is_default(AstalWpEndpoint *self, gboolean is_default) {
@@ -350,6 +363,9 @@ static void astal_wp_endpoint_get_property(GObject *object, guint property_id, G
             break;
         case ASTAL_WP_ENDPOINT_PROP_DEVICE_ID:
             g_value_set_uint(value, self->device_id);
+            break;
+        case ASTAL_WP_ENDPOINT_PROP_DEVICE:
+            g_value_set_object(value, self->device );
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -466,6 +482,9 @@ static void astal_wp_endpoint_update_properties(AstalWpEndpoint *self) {
         self->device_id = g_ascii_strtoull(d_id, NULL, 10);
     }
 
+    AstalWpDevice *device = astal_wp_wp_get_device(priv->wp, self->device_id);
+    self->device = device;
+
     g_object_notify(G_OBJECT(self), "id");
     g_object_notify(G_OBJECT(self), "description");
     g_object_notify(G_OBJECT(self), "name");
@@ -473,6 +492,7 @@ static void astal_wp_endpoint_update_properties(AstalWpEndpoint *self) {
     g_object_notify(G_OBJECT(self), "media-class");
     g_object_notify(G_OBJECT(self), "serial");
     g_object_notify(G_OBJECT(self), "device-id");
+    g_object_notify(G_OBJECT(self), "device");
     g_object_notify(G_OBJECT(self), "path");
 }
 
@@ -576,6 +596,7 @@ static void astal_wp_endpoint_init(AstalWpEndpoint *self) {
     self->description = NULL;
     self->name = NULL;
     self->path = NULL;
+    self->device = NULL;
 }
 
 static void astal_wp_endpoint_dispose(GObject *object) {
@@ -701,6 +722,16 @@ static void astal_wp_endpoint_class_init(AstalWpEndpointClass *class) {
      */
     astal_wp_endpoint_properties[ASTAL_WP_ENDPOINT_PROP_DEVICE_ID] =
         g_param_spec_uint("device-id", "device-id", "device-id", 0, UINT_MAX, 0, G_PARAM_READABLE);
+
+    /**
+     * AstalWpEndpoint:device:
+     *
+     * The device attached to this endpoint.
+     */
+    astal_wp_endpoint_properties[ASTAL_WP_ENDPOINT_PROP_DEVICE] =
+        g_param_spec_object("device", "device", "device", ASTAL_WP_TYPE_DEVICE, G_PARAM_READABLE);
+
+
 
     g_object_class_install_properties(object_class, ASTAL_WP_ENDPOINT_N_PROPERTIES,
                                       astal_wp_endpoint_properties);
